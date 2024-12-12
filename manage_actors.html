@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Actors</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script>
+        // Fetch and populate the table with actors dynamically
+        document.addEventListener("DOMContentLoaded", () => {
+            const fetchActors = (name = '') => {
+                fetch(`/api/manage_actors?name=${encodeURIComponent(name)}`)
+                    .then(response => response.json()) // Handle the JSON response
+                    .then(data => {
+                        const tableBody = document.querySelector("tbody");
+                        tableBody.innerHTML = ""; // Clear existing table rows
+
+                        if (data.length === 0) {
+                            tableBody.innerHTML = `
+                                <tr>
+                                    <td colspan="4" class="text-center">No actors found.</td>
+                                </tr>
+                            `;
+                        } else {
+                            data.forEach(actor => {
+                                const formattedDate = new Date(actor.dateOfBirth).toISOString().split('T')[0]; // Format date
+                                tableBody.innerHTML += `
+                                    <tr>
+                                        <td>${actor.actorID}</td>
+                                        <td>${actor.name}</td>
+                                        <td>${formattedDate}</td>
+                                        <td>
+                                            <form action="/edit_actor" method="post" style="display:inline;">
+                                                <input type="hidden" name="actorID" value="${actor.actorID}">
+                                                <input type="text" name="name" placeholder="New Name" required>
+                                                <input type="date" name="dateOfBirth" required>
+                                                <button type="submit" class="btn btn-warning btn-sm">Edit</button>
+                                            </form>
+                                            <form action="/delete_actor" method="post" style="display:inline;">
+                                                <input type="hidden" name="actorID" value="${actor.actorID}">
+                                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this actor?');">Delete</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                `;
+                            });
+                        }
+                    })
+                    .catch(err => {
+                        console.error("Error fetching actors:", err);
+                        const tableBody = document.querySelector("tbody");
+                        tableBody.innerHTML = `
+                            <tr>
+                                <td colspan="4" class="text-center">Error loading data.</td>
+                            </tr>
+                        `;
+                    });
+            };
+
+            // Initial load
+            fetchActors();
+
+            // Handle search functionality
+            document.getElementById("searchForm").addEventListener("submit", (event) => {
+                event.preventDefault();
+                const name = document.getElementById("name").value;
+                fetchActors(name);
+            });
+        });
+    </script>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Manage Actors</h1>
+
+        <!-- Search Form -->
+        <form id="searchForm" class="mb-4">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-10">
+                    <label for="name" class="form-label">Search by Name:</label>
+                    <input type="text" id="name" name="name" class="form-control">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary mt-4 w-100">Search</button>
+                </div>
+            </div>
+        </form>
+
+        <!-- Actors Table -->
+        <h2 class="mb-4">Existing Actors</h2>
+        <table class="table table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Actor ID</th>
+                    <th>Name</th>
+                    <th>Date of Birth</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="4" class="text-center">Loading...</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- Add New Actor -->
+        <h2 class="mt-5 mb-4">Add New Actor</h2>
+        <form action="/add_actor" method="post" class="p-4 border rounded bg-light shadow">
+            <div class="mb-3">
+                <label for="name" class="form-label">Name:</label>
+                <input type="text" id="name" name="name" class="form-control" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="dateOfBirth" class="form-label">Date of Birth:</label>
+                <input type="date" id="dateOfBirth" name="dateOfBirth" class="form-control" required>
+            </div>
+
+            <div class="text-center">
+                <button type="submit" class="btn btn-success">Add Actor</button>
+                <a href="/" class="btn btn-secondary">Back to Home</a>
+            </div>
+        </form>
+    </div>
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
